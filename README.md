@@ -1,2 +1,2 @@
-# taxi_service_back_end
+# Taxi ordering service - back end
 Projekat iz KTS/NVT/MRS/ISA - Taxi ordering application
