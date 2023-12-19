@@ -1,5 +1,7 @@
 package org.taxiservice.controller;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -7,6 +9,7 @@ import javax.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,8 +19,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.taxiservice.dto.UserDTO;
 import org.taxiservice.dto.UserTokenStateDTO;
@@ -31,11 +36,19 @@ public class LoginController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<Object> register(@Valid @RequestBody UserDTO user) {
+    public ResponseEntity<Object> register(@Valid @RequestBody UserDTO user) throws IOException {
         System.out.println("Register controller");
-        UserTokenStateDTO created = userService.create(user);
+        // UserTokenStateDTO created =
+        userService.create(user);
         System.out.println("Register controller registered user: " + user.getUsername() + user.getId());
-        return new ResponseEntity<>(created, HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/register/{key}")
+    public ResponseEntity<Object> confirmRegistration(@PathVariable("key") String key) {
+        System.out.println("Confirmation key controller");
+        userService.confirmRegistration(key);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // @GetMapping("/register/{key}")

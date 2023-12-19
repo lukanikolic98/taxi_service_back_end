@@ -1,20 +1,25 @@
 package org.taxiservice.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.taxiservice.dto.UserDTO;
 import org.taxiservice.dto.UserTokenStateDTO;
+import org.taxiservice.model.Authority;
 import org.taxiservice.model.RegisteredUser;
 import org.taxiservice.model.User;
+import org.taxiservice.repository.AuthorityRepository;
 import org.taxiservice.repository.UserRepository;
 import org.taxiservice.security.CustomUserDetailsService;
 import org.taxiservice.security.TokenUtils;
+import net.bytebuddy.utility.RandomString;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -28,16 +33,29 @@ public class UserService {
   private AuthenticationManager authenticationManager;
   @Autowired
   private CustomUserDetailsService userDetailsService;
+  @Autowired
+  private AuthorityRepository authorityRepository;
+  @Autowired
+  private MailService mailService;
 
-  public UserTokenStateDTO create(UserDTO dto) {
+  public void create(UserDTO dto) throws IOException {
     RegisteredUser user = new RegisteredUser(dto.getName(), dto.getSurname(), dto.getUsername(), dto.getPassword(),
         dto.getCity());
     user.setPassword(userDetailsService.encodePassword(user.getPassword()));
 
+    Authority a = authorityRepository.findByName("ROLE_USER");
+
+    List<Authority> authorityList = new ArrayList<>();
+    authorityList.add(a);
+    user.setAuthorities(authorityList);
+
+    user.setRegistrationKey(RandomString.make(20));
     // Big NO nO, popraviti
-    user.setEnabled(true);
+    user.setEnabled(false);
     user = userRepository.save(user);
-    return generateToken(user.getUsername(), dto.getPassword());
+
+    mailService.sendTextEmail(user.getUsername(), user.getRegistrationKey());
+    // generateToken(user.getUsername(), dto.getPassword());
   }
 
   public UserTokenStateDTO generateToken(String username, String password) {
@@ -61,5 +79,11 @@ public class UserService {
   public User getOne(String username) throws NoSuchElementException {
     User user = userRepository.findByUsername(username);
     return user;
+  }
+
+  public void confirmRegistration(String registrationKey) {
+    User user = userRepository.findByRegistrationKey(registrationKey);
+    user.setEnabled(true);
+    userRepository.save(user);
   }
 }
