@@ -20,12 +20,20 @@ import org.springframework.stereotype.Service;
 public class CustomUserDetailsService implements UserDetailsService {
 
 	protected final Log LOGGER = LogFactory.getLog(getClass());
-	@Autowired
+
 	private UserRepository userRepository;
-	@Lazy
+
 	private AuthenticationManager authenticationManager;
-	@Autowired
+
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	public CustomUserDetailsService(UserRepository userRepository, @Lazy AuthenticationManager authenticationManager,
+			@Lazy PasswordEncoder passwordEncoder) {
+		this.userRepository = userRepository;
+		this.authenticationManager = authenticationManager;
+		this.passwordEncoder = passwordEncoder;
+	}
 
 	// Funkcija koja na osnovu username-a iz baze vraca objekat User-a
 	@Override
